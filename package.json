@@ -1,0 +1,99 @@
+{
+  "name": "redux-saga-router",
+  "version": "1.0.0-alpha.1",
+  "description": "A router for Redux Saga",
+  "main": "lib/index.js",
+  "files": [
+    "react.js",
+    "lib",
+    "src"
+  ],
+  "scripts": {
+    "build": "babel src --out-dir lib",
+    "clean": "rimraf lib",
+    "lint": "eslint src",
+    "prepublish": "npm run clean && npm run build",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jfairbank/redux-saga-router.git"
+  },
+  "keywords": [
+    "redux",
+    "redux-saga",
+    "saga",
+    "router",
+    "routing",
+    "history"
+  ],
+  "author": "Jeremy Fairbank <elpapapollo@gmail.com> (http://jeremyfairbank.com)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/jfairbank/redux-saga-router/issues"
+  },
+  "homepage": "https://github.com/jfairbank/redux-saga-router#readme",
+  "dependencies": {
+    "history": "^4.3.0",
+    "pinkie-promise": "^2.0.1",
+    "ruta3": "^2.0.1"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.16.0",
+    "babel-core": "^6.16.0",
+    "babel-eslint": "^7.0.0",
+    "babel-loader": "^6.2.5",
+    "babel-plugin-transform-class-properties": "^6.16.0",
+    "babel-plugin-transform-export-extensions": "^6.8.0",
+    "babel-polyfill": "^6.16.0",
+    "babel-preset-es2015": "^6.16.0",
+    "babel-preset-es2015-loose": "^8.0.0",
+    "babel-preset-react": "^6.16.0",
+    "eslint": "^3.6.1",
+    "eslint-config-airbnb": "^12.0.0",
+    "eslint-config-airbnb-base": "^8.0.0",
+    "eslint-import-resolver-node": "^0.2.3",
+    "eslint-plugin-import": "^1.16.0",
+    "eslint-plugin-jsx-a11y": "^2.2.2",
+    "eslint-plugin-react": "^6.3.0",
+    "express": "^4.14.0",
+    "react": "^15.3.2",
+    "react-dom": "^15.3.2",
+    "react-redux": "^4.4.5",
+    "react-router": "^2.8.1",
+    "redux": "^3.6.0",
+    "redux-saga": "^0.11.1",
+    "rimraf": "^2.5.4",
+    "webpack": "^1.13.2",
+    "webpack-dev-server": "^1.16.1"
+  },
+  "peerDependencies": {
+    "redux-saga": "^0.10.0 || ^0.11.0"
+  },
+  "babel": {
+    "presets": [
+      "es2015-loose",
+      "react"
+    ],
+    "plugins": [
+      "transform-export-extensions",
+      "transform-class-properties"
+    ]
+  },
+  "eslintConfig": {
+    "parser": "babel-eslint",
+    "extends": [
+      "airbnb",
+      "plugin:import/errors",
+      "plugin:import/warnings"
+    ],
+    "settings": {
+      "import/resolver": "node"
+    },
+    "rules": {
+      "arrow-parens": 0,
+      "react/forbid-prop-types": 0,
+      "react/jsx-filename-extension": 0
+    }
+  }
+}
