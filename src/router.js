@@ -7,14 +7,6 @@ const STATE = {
   HANDLE_LOCATION: 1,
 };
 
-function padSlash(path) {
-  if (path[0] !== '/') {
-    return `/${path}`;
-  }
-
-  return path;
-}
-
 export default function router(history, routes) {
   const listen = createHistoryListener(history);
   const routeMatcher = buildRouteMatcher(routes);
@@ -30,7 +22,7 @@ export default function router(history, routes) {
   }
 
   function handleLocationValue(location) {
-    const path = padSlash(location.pathname);
+    const path = location.pathname;
     const match = routeMatcher.match(path);
 
     if (match) {
