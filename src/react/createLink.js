@@ -1,3 +1,4 @@
+/* eslint-disable import/no-extraneous-dependencies */
 import React, { Component, PropTypes } from 'react';
 
 export default function createLink(history) {
