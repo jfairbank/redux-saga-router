@@ -1,0 +1,16 @@
+{
+  "parser": "babel-eslint",
+  "extends": [
+    "airbnb",
+    "plugin:import/errors",
+    "plugin:import/warnings"
+  ],
+  "settings": {
+    "import/resolver": "node"
+  },
+  "rules": {
+    "arrow-parens": 0,
+    "react/forbid-prop-types": 0,
+    "react/jsx-filename-extension": 0
+  }
+}

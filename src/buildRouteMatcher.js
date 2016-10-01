@@ -1,6 +1,6 @@
 import ruta3 from 'ruta3';
 
-export default function buildRouterMatcher(routes) {
+export default function buildRouteMatcher(routes) {
   const routeMatcher = ruta3();
 
   Object.keys(routes).forEach((route) => {
