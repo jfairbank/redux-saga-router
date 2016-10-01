@@ -1,5 +1,8 @@
 # Redux Saga Router
 
+[![Travis branch](https://img.shields.io/travis/jfairbank/redux-saga-router/master.svg?style=flat-square)](https://travis-ci.org/jfairbank/redux-saga-router)
+[![npm](https://img.shields.io/npm/v/redux-saga-router.svg?style=flat-square)](https://www.npmjs.com/package/redux-saga-router)
+
 #### A router for Redux Saga
 
 Redux Saga Router gives you a saga for handling clientside routes in your Redux
