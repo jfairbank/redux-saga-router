@@ -21,7 +21,7 @@ dispatch Redux actions in response to route changes.
 
 ## Install
 
-    $ npm install --save redux-saga-router@latest
+    $ npm install --save redux-saga-router
 
 ## Usage
 
