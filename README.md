@@ -3,8 +3,18 @@
 #### A router for Redux Saga
 
 Redux Saga Router gives you a saga for handling clientside routes in your Redux
-Saga application. This affords you perfect way to manage side effects or
+Saga application. This affords you a perfect way to manage side effects or
 dispatch Redux actions in response to route changes.
+
+## Table of Contents
+
+- [Install](#install)
+- [Usage](#usage)
+- [Navigation](#navigation)
+  - [Hash History](#hash-history)
+  - [Browser History](#browser-history)
+  - [Browser History with React](#browser-history-with-react)
+  - [React Router](#react-router)
 
 ## Install
 
@@ -58,4 +68,209 @@ function* mainSaga() {
 
   yield* router(history, routes);
 }
+```
+
+## Navigation
+
+### Hash History
+If you use hash history, then navigation will work right out of the box.
+
+```js
+import { router, createHashHistory } from 'redux-saga-router';
+
+const history = createHashHistory();
+
+const routes = {
+  // ...
+};
+
+function* mainSaga() {
+  const data = yield call(fetchInitialData);
+
+  yield put(ready(data));
+
+  yield* router(history, routes);
+}
+```
+
+```html
+<nav>
+  <ul>
+    <li><a href="#/users">Users</a></li>
+    <li><a href="#/users/1">A Specific User</a></li>
+  </ul>
+</nav>
+```
+
+### Browser History
+
+Browser history depends on `pushState` changes, so you'll need a method for
+making anchor tags change history state instead of actually exhibiting their
+default behavior. Also, if you're building a single-page application, your
+server will need to support your client side routes to ensure your app loads
+properly.
+
+```js
+import { router, createBrowserHistory } from 'redux-saga-router';
+
+const history = createBrowserHistory();
+
+// This is a naive example, so you might want something more robust
+document.addEventListener('click', (e) => {
+  const el = e.target;
+
+  if (el.tagName === 'A') {
+    e.preventDefault();
+    history.push(el.pathname);
+  }
+});
+
+const routes = {
+  // ...
+};
+
+function* mainSaga() {
+  // ...
+}
+```
+
+### Browser History with React
+
+If you're using React in your application, then Redux Saga Router does export a
+higher-order component (HOC) that allows you to abstract away dealing with
+`pushState` manually. You can import the `createLink` HOC from
+`redux-saga-router/react` to create a `Link` component similar to what's
+available in React Router. Just pass in your `history` object to the
+`createLink` function to create the `Link` component. You'll probably want a
+separate file in your application for exporting your `history` object and your
+`Link` component.
+
+```js
+// history.js
+
+import { createBrowserHistory } from 'redux-saga-router';
+import { createLink } from 'redux-saga-router/react'
+
+const history = createBrowserHistory();
+
+export const Link = createLink(history);
+export { history };
+```
+
+```js
+// saga.js
+
+import { router } from 'redux-saga-router';
+import { history } from './history';
+
+const routes = {
+  // ...
+};
+
+function* mainSaga() {
+  const data = yield call(fetchInitialData);
+
+  yield put(ready(data));
+
+  yield* router(history, routes);
+}
+```
+
+```jsx
+// App.js
+
+import React from 'react';
+import { Link } from './history';
+
+export default function App() {
+  return (
+    <nav>
+      <ul>
+        <li><Link to="/users">Users</Link></li>
+        <li><Link to="/users/1">A Specific User</Link></li>
+      </ul>
+    </nav>
+  );
+}
+```
+
+### React Router
+
+Redux Saga Router can also work in tandem with React Router! Instead of using
+one of Redux Saga Router's history creation functions, just use your history
+object from React Router.
+
+**NOTE:** examples below are for React Router v2/3 for now.
+
+```js
+// saga.js
+
+import { router } from 'redux-saga-router';
+import { browserHistory as history } from 'react-router';
+
+const routes = {
+  // ...
+};
+
+export default function* mainSaga() {
+  const data = yield call(fetchInitialData);
+
+  yield put(ready(data));
+
+  yield* router(history, routes);
+}
+```
+
+```jsx
+// App.js
+
+import React from 'react';
+import { Link } from 'react-router';
+
+export default function App({ children }) {
+  return (
+    <div>
+      <nav>
+        <ul>
+          <li><Link to="/users">Users</Link></li>
+          <li><Link to="/users/1">A Specific User</Link></li>
+        </ul>
+      </nav>
+
+      <div>
+        {children}
+      </div>
+    </div>
+  );
+}
+```
+
+```jsx
+import React from 'react';
+import { render } from 'react-dom';
+import { applyMiddleware, createStore } from 'redux';
+import createSagaMiddleware from 'redux-saga';
+import { Router, Route, browserHistory as history } from 'react-router';
+import App from './App';
+import Users from './Users';
+import User from './User';
+import mainSaga from './saga';
+
+function reducer() {
+  return {};
+}
+
+const sagaMiddleware = createSagaMiddleware();
+const store = createStore(reducer, applyMiddleware(sagaMiddleware));
+
+sagaMiddleware.run(mainSaga);
+
+render((
+  <Router history={history}>
+    <Route path="/" component={App}>
+      <Route path="/users" component={Users} />
+      <Route path="/users/:id" component={User} />
+    </Route>
+  </Router>
+), document.getElementById('main'));
 ```
