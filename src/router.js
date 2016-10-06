@@ -1,50 +1,17 @@
 /* eslint no-console: ["error", { allow: ["error"] }] */
-import { call } from 'redux-saga/effects';
+import { call, take } from 'redux-saga/effects';
+import fsmIterator from 'fsm-iterator';
 import buildRouteMatcher from './buildRouteMatcher';
-import createHistoryListener from './createHistoryListener';
+import createHistoryChannel from './createHistoryChannel';
 
-const STATE = {
-  LISTEN: 0,
-  HANDLE_LOCATION: 1,
-  DONE: 2,
-};
+const INIT = 'INIT';
+const LISTEN = 'LISTEN';
+const HANDLE_LOCATION = 'HANDLE_LOCATION';
 
 export default function router(history, routes) {
-  const listen = createHistoryListener(history);
   const routeMatcher = buildRouteMatcher(routes);
-
-  let state = STATE.LISTEN;
-  let previousState = null;
+  let historyChannel = null;
   let lastMatch = null;
-
-  function updateState(newState) {
-    previousState = state;
-    state = newState;
-  }
-
-  function listenValue() {
-    const value = call(listen);
-
-    updateState(STATE.HANDLE_LOCATION);
-
-    return { value, done: false };
-  }
-
-  function handleLocationValue(location) {
-    const path = location.pathname;
-    const match = routeMatcher.match(path);
-
-    if (match) {
-      const value = call(match.action, match.params);
-
-      updateState(STATE.LISTEN);
-      lastMatch = match;
-
-      return { value, done: false };
-    }
-
-    return listenValue();
-  }
 
   function errorMessageValue(error, message) {
     let finalMessage = `Redux Saga Router: ${message}:\n${error.message}`;
@@ -53,58 +20,56 @@ export default function router(history, routes) {
       finalMessage += `\n${error.stack}`;
     }
 
-    const value = call([console, console.error], finalMessage);
-
-    updateState(STATE.LISTEN);
-
-    return { value, done: false };
-  }
-
-  function doneValue(value) {
     return {
-      value,
-      done: true,
+      value: call([console, console.error], finalMessage),
+      next: LISTEN,
     };
   }
 
-  const iterator = {
-    name: '',
+  return fsmIterator(INIT, {
+    [INIT]: () => ({
+      value: call(createHistoryChannel, history),
+      next: LISTEN,
+    }),
 
-    next(location) {
-      switch (state) {
-        case STATE.LISTEN:
-          return listenValue();
-
-        case STATE.HANDLE_LOCATION:
-          return handleLocationValue(location);
-
-        default:
-          return doneValue();
+    [LISTEN](channel) {
+      if (channel) {
+        historyChannel = channel;
       }
+
+      return {
+        value: take(historyChannel),
+        next: HANDLE_LOCATION,
+      };
     },
 
-    throw(e) {
-      switch (previousState) {
-        case STATE.HANDLE_LOCATION:
+    [HANDLE_LOCATION](location, fsm) {
+      const path = location.pathname;
+      const match = routeMatcher.match(path);
+
+      if (match) {
+        lastMatch = match;
+
+        return {
+          value: call(match.action, match.params),
+          next: LISTEN,
+        };
+      }
+
+      return fsm[LISTEN]();
+    },
+
+    throw(e, fsm) {
+      switch (fsm.previousState) {
+        case HANDLE_LOCATION:
           return errorMessageValue(e, `Unhandled ${e.name} in route "${lastMatch.route}"`);
 
-        case STATE.LISTEN:
+        case LISTEN:
           return errorMessageValue(e, `Unexpected ${e.name} while listening for route`);
 
         default:
-          return doneValue();
+          return { done: true };
       }
     },
-
-    return(value) {
-      updateState(STATE.DONE);
-      return doneValue(value);
-    },
-  };
-
-  if (typeof Symbol === 'function' && Symbol.iterator) {
-    iterator[Symbol.iterator] = () => iterator;
-  }
-
-  return iterator;
+  });
 }

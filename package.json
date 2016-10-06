@@ -34,8 +34,8 @@
   },
   "homepage": "https://github.com/jfairbank/redux-saga-router#readme",
   "dependencies": {
+    "fsm-iterator": "^1.0.0",
     "history": "^4.3.0",
-    "pinkie-promise": "^2.0.1",
     "ruta3": "^2.0.1"
   },
   "devDependencies": {

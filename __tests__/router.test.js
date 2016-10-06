@@ -1,4 +1,5 @@
 /* eslint no-console: ["error", { allow: ["error"] }] */
+import { eventChannel } from 'redux-saga';
 import { put } from 'redux-saga/effects';
 import testSaga from 'redux-saga-test-plan';
 import router from '../src/router';
@@ -46,9 +47,12 @@ const routes = {
   '/error': errorSaga,
 };
 
+const fakeChannel = eventChannel(() => () => {});
+
 test('router', () => {
   testSaga(router, history, routes)
-    .next() // listen
+    .next() // init
+    .next(fakeChannel) // listen
     .next(initialLocation) // no match and listen
 
     .next({ pathname: '/foo' })
