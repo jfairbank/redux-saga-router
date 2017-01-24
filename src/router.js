@@ -1,5 +1,5 @@
 /* eslint no-console: ["error", { allow: ["error"] }] */
-import { call, take } from 'redux-saga/effects';
+import { call, take, fork } from 'redux-saga/effects';
 import fsmIterator from 'fsm-iterator';
 import buildRouteMatcher from './buildRouteMatcher';
 import createHistoryChannel from './createHistoryChannel';
@@ -33,7 +33,7 @@ export default function router(history, routes) {
     }),
 
     [LISTEN](channel) {
-      if (channel) {
+      if (channel && !historyChannel) {
         historyChannel = channel;
       }
 
@@ -51,7 +51,7 @@ export default function router(history, routes) {
         lastMatch = match;
 
         return {
-          value: call(match.action, match.params),
+          value: fork(match.action, match.params),
           next: LISTEN,
         };
       }
