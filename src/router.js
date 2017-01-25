@@ -1,5 +1,5 @@
 /* eslint no-console: ["error", { allow: ["error"] }] */
-import { call, take, fork } from 'redux-saga/effects';
+import { call, take, fork, cancel } from 'redux-saga/effects';
 import fsmIterator from 'fsm-iterator';
 import buildRouteMatcher from './buildRouteMatcher';
 import createHistoryChannel from './createHistoryChannel';
@@ -12,6 +12,7 @@ export default function router(history, routes) {
   const routeMatcher = buildRouteMatcher(routes);
   let historyChannel = null;
   let lastMatch = null;
+  let lastSaga = null;
 
   function errorMessageValue(error, message) {
     let finalMessage = `Redux Saga Router: ${message}:\n${error.message}`;
@@ -32,9 +33,13 @@ export default function router(history, routes) {
       next: LISTEN,
     }),
 
-    [LISTEN](channel) {
-      if (channel && !historyChannel) {
-        historyChannel = channel;
+    [LISTEN](effects) {
+      if (effects && !historyChannel) {
+        historyChannel = effects;
+      }
+
+      if (effects instanceof Array) {
+        [lastSaga] = effects;
       }
 
       return {
@@ -46,12 +51,20 @@ export default function router(history, routes) {
     [HANDLE_LOCATION](location, fsm) {
       const path = location.pathname;
       const match = routeMatcher.match(path);
+      const effects = [];
 
       if (match) {
         lastMatch = match;
+        effects.push(fork(match.action, match.params));
+      }
 
+      if (lastSaga) {
+        effects.push(cancel(lastSaga));
+      }
+
+      if (effects.length > 0) {
         return {
-          value: fork(match.action, match.params),
+          value: effects,
           next: LISTEN,
         };
       }

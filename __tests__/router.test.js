@@ -1,6 +1,6 @@
 /* eslint no-console: ["error", { allow: ["error"] }] */
 import { eventChannel } from 'redux-saga';
-import { put } from 'redux-saga/effects';
+import { put, fork } from 'redux-saga/effects';
 import testSaga from 'redux-saga-test-plan';
 import router from '../src/router';
 
@@ -56,21 +56,29 @@ test('router', () => {
     .next(initialLocation) // no match and listen
 
     .next({ pathname: '/foo' })
-    .fork(fooSaga, {})
+    .parallel([
+      fork(fooSaga, {}),
+    ])
 
     .next() // listen
     .next({ pathname: '/bar/42' })
-    .fork(barSaga, { id: '42' })
+    .parallel([
+      fork(barSaga, { id: '42' }),
+    ])
 
     .next() // listen
     .next({ pathname: '/hello' }) // no match and listen
 
     .next({ pathname: '/baz/20/quux/abcd-1234' })
-    .fork(bazSaga, { id: '20', otherId: 'abcd-1234' })
+    .parallel([
+      fork(bazSaga, { id: '20', otherId: 'abcd-1234' }),
+    ])
 
     .next() // listen
     .next({ pathname: '/error' })
-    .fork(errorSaga, {})
+    .parallel([
+      fork(errorSaga, {}),
+    ])
     .throw(fakeError) // simulate error in route
     .call(
       [console, console.error],
@@ -79,7 +87,9 @@ test('router', () => {
 
     .next() // listen
     .next({ pathname: '/foo' })
-    .fork(fooSaga, {})
+    .parallel([
+      fork(fooSaga, {}),
+    ])
 
     .next() // listen
     .throw(fakeError) // simulate error while listening
@@ -90,7 +100,9 @@ test('router', () => {
 
     .next() // listen
     .next({ pathname: '/error' })
-    .fork(errorSaga, {})
+    .parallel([
+      fork(errorSaga, {}),
+    ])
     .throw(fakeErrorWithoutStack) // simulate error when stack not available
     .call(
       [console, console.error],
