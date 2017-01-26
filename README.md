@@ -75,15 +75,21 @@ function* mainSaga() {
 ```
 
 ## Behavior
-Redux Saga Router will `spawn` the matching route saga. When the location changes, the current running saga will be cancelled. As such, you might want to [cleanup](https://redux-saga.github.io/redux-saga/docs/advanced/TaskCancellation.html) your saga in that event.
 
-If you wish to avoid your saga to be cancelled, you can `spawn` a subsaga in your route saga like the following:
+Redux Saga Router will `spawn` the matching route saga. When the location
+changes, the current running saga will be cancelled. As such, you might want to
+[clean up](https://redux-saga.github.io/redux-saga/docs/advanced/TaskCancellation.html)
+your saga in that event.
+
+If you wish to avoid your saga's being cancelled, you can `spawn` a sub saga in
+your route saga like the following:
 
 ```js
 const routes = {
   *'/'() {
     yield spawn(subSaga);
   },
+
   // Or long form with function expression
   '/': function* homeSaga() {
     yield spawn(subSaga);
@@ -91,8 +97,11 @@ const routes = {
 };
 ```
 
-In the event of an unhandled error occurring in one of your sagas, the error will stop the running saga and will not propagate to the router.
-That means that your application will continue to function when you hit other routes.
+In the event of an unhandled error occurring in one of your sagas, the error
+will stop the running saga and will not propagate to the router. That means that
+your application will continue to function when you hit other routes. That also
+means you should ensure you handle any potential errors that could occur in your
+route sagas.
 
 ## Navigation
 
