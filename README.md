@@ -13,6 +13,7 @@ dispatch Redux actions in response to route changes.
 
 - [Install](#install)
 - [Usage](#usage)
+- [Behavior](#behavior)
 - [Navigation](#navigation)
   - [Hash History](#hash-history)
   - [Browser History](#browser-history)
@@ -32,7 +33,7 @@ The `router` saga expects a history object and a routes object with key-value
 pairs of route paths to other sagas (or just functions).
 
 To create a history object, you can use `createBrowserHistory` or
-`createHashHistory`. `createBrowserHistory`uses HTML5 `pushState` while
+`createHashHistory`. `createBrowserHistory` uses HTML5 `pushState` while
 `createHashHistory` uses (you guessed it) hashes, which is perfect for older
 browsers. These two history creation functions in fact come from the
 [history](https://github.com/mjackson/history) library.
@@ -72,6 +73,26 @@ function* mainSaga() {
   yield* router(history, routes);
 }
 ```
+
+## Behavior
+Redux Saga Router will `spawn` the matching route saga. When the location changes, the current running saga will be cancelled. As such, you might want to [cleanup](https://redux-saga.github.io/redux-saga/docs/advanced/TaskCancellation.html) your saga in that event.
+
+If you wish to avoid your saga to be cancelled, you can `spawn` a subsaga in your route saga like the following:
+
+```js
+const routes = {
+  *'/'() {
+    yield spawn(subSaga);
+  },
+  // Or long form with function expression
+  '/': function* homeSaga() {
+    yield spawn(subSaga);
+  },
+};
+```
+
+In the event of an unhandled error occurring in one of your sagas, the error will stop the running saga and will not propagate to the router.
+That means that your application will continue to function when you hit other routes.
 
 ## Navigation
 
