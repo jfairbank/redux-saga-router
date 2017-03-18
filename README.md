@@ -1,5 +1,7 @@
 # Redux Saga Router
 
+[![Greenkeeper badge](https://badges.greenkeeper.io/jfairbank/redux-saga-router.svg)](https://greenkeeper.io/)
+
 [![Travis branch](https://img.shields.io/travis/jfairbank/redux-saga-router/master.svg?style=flat-square)](https://travis-ci.org/jfairbank/redux-saga-router)
 [![npm](https://img.shields.io/npm/v/redux-saga-router.svg?style=flat-square)](https://www.npmjs.com/package/redux-saga-router)
 
