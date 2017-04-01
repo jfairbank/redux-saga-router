@@ -8,7 +8,7 @@ const INIT = 'INIT';
 const LISTEN = 'LISTEN';
 const HANDLE_LOCATION = 'HANDLE_LOCATION';
 
-export default function router(history, routes) {
+export default function router(history, routes, options = {}) {
   const routeMatcher = buildRouteMatcher(routes);
   let historyChannel = null;
   let lastMatch = null;
@@ -50,12 +50,13 @@ export default function router(history, routes) {
 
     [HANDLE_LOCATION](location, fsm) {
       const path = location.pathname;
-      const match = routeMatcher.match(path);
+      let match = routeMatcher.match(path);
       const effects = [];
 
-      if (match) {
+      while (match !== null) {
         lastMatch = match;
         effects.push(spawn(match.action, match.params));
+        match = options.shouldFallThrough ? match.next() : null;
       }
 
       if (lastSaga) {

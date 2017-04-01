@@ -31,6 +31,10 @@ function* barSaga({ id }) {
   yield put({ type: 'BAR', payload: id });
 }
 
+function* barDetailsSaga({ id }) {
+  yield put({ type: 'BAR_DETAILS', payload: id });
+}
+
 function* bazSaga({ id, otherId }) {
   yield put({ type: 'BAZ', payload: [id, otherId] });
 }
@@ -42,9 +46,14 @@ function* errorSaga() {
 
 const routes = {
   '/foo': fooSaga,
-  '/bar/:id': barSaga,
+  '/bar/:id/*': barSaga,
+  '/bar/:id/details': barDetailsSaga,
   '/baz/:id/quux/:otherId': bazSaga,
   '/error': errorSaga,
+};
+
+const options = {
+  shouldFallThrough: true,
 };
 
 const fakeChannel = eventChannel(() => () => {});
@@ -61,9 +70,84 @@ test('router', () => {
     ])
 
     .next() // listen
-    .next({ pathname: '/bar/42' })
+    .next({ pathname: '/bar/42/' })
     .parallel([
       spawn(barSaga, { id: '42' }),
+    ])
+
+    .next() // listen
+    .next({ pathname: '/hello' }) // no match and listen
+
+    .next({ pathname: '/baz/20/quux/abcd-1234' })
+    .parallel([
+      spawn(bazSaga, { id: '20', otherId: 'abcd-1234' }),
+    ])
+
+    .next() // listen
+    .next({ pathname: '/error' })
+    .parallel([
+      spawn(errorSaga, {}),
+    ])
+    .throw(fakeError) // simulate error in route
+    .call(
+      [console, console.error],
+      'Redux Saga Router: Unhandled Error in route "/error":\nan error\n1234'
+    )
+
+    .next() // listen
+    .next({ pathname: '/foo' })
+    .parallel([
+      spawn(fooSaga, {}),
+    ])
+
+    .next() // listen
+    .throw(fakeError) // simulate error while listening
+    .call(
+      [console, console.error],
+      'Redux Saga Router: Unexpected Error while listening for route:\nan error\n1234'
+    )
+
+    .next() // listen
+    .next({ pathname: '/error' })
+    .parallel([
+      spawn(errorSaga, {}),
+    ])
+    .throw(fakeErrorWithoutStack) // simulate error when stack not available
+    .call(
+      [console, console.error],
+      'Redux Saga Router: Unhandled Error in route "/error":\nan error'
+    )
+
+    .finish()
+    .isDone()
+
+    .restart()
+    .finish(42)
+    .returns(42);
+});
+
+test('router with fallThrough', () => {
+  testSaga(router, history, routes, options)
+    .next() // init
+    .next(fakeChannel) // listen
+    .next(initialLocation) // no match and listen
+
+    .next({ pathname: '/foo' })
+    .parallel([
+      spawn(fooSaga, {}),
+    ])
+
+    .next() // listen
+    .next({ pathname: '/bar/42/' })
+    .parallel([
+      spawn(barSaga, { id: '42' }),
+    ])
+
+    .next() // listen
+    .next({ pathname: '/bar/42/details' })
+    .parallel([
+      spawn(barSaga, { id: '42' }),
+      spawn(barDetailsSaga, { id: '42' }),
     ])
 
     .next() // listen
