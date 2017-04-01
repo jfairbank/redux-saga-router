@@ -8,7 +8,7 @@ const INIT = 'INIT';
 const LISTEN = 'LISTEN';
 const HANDLE_LOCATION = 'HANDLE_LOCATION';
 
-export default function router(history, routes) {
+export default function router(history, routes, options = {}) {
   const routeMatcher = buildRouteMatcher(routes);
   let historyChannel = null;
   let lastMatch = null;
@@ -56,6 +56,10 @@ export default function router(history, routes) {
       if (match) {
         lastMatch = match;
         effects.push(spawn(match.action, match.params));
+
+        if ('beforeRouteChange' in options) {
+          effects.unshift(spawn(options.beforeRouteChange, match.params));
+        }
       }
 
       if (lastSaga) {
