@@ -19,6 +19,25 @@ test('creates a route matcher', () => {
   expect(fooMatch.action).toBe(fooRoute);
 });
 
+test('recognizes fall-through pattern', () => {
+  const rootRoute = () => 'root route';
+  const fooRoute = () => 'foo route';
+
+  const routeMatcher = buildRouteMatcher({
+    '/*': rootRoute,
+    '/foo': fooRoute,
+  });
+
+  const match1 = routeMatcher.match('/foo');
+  const match2 = match1.next();
+
+  expect(match1).not.toBe(null);
+  expect(match2).not.toBe(null);
+
+  expect(match1.action).toBe(rootRoute);
+  expect(match2.action).toBe(fooRoute);
+});
+
 test('handles params', () => {
   const fooRoute = ({ id }) => `got ${id}`;
   const barRoute = ({ id, otherId }) => `${id} : ${otherId}`;
