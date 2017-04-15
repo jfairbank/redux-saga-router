@@ -130,10 +130,10 @@ test('router with beforeRouteChange', () => {
     .next() // init
     .next(fakeChannel) // listen
     .next(initialLocation) // no match and listen
-
+    .next({ pathname: '/foo' })
+    .spawn(beforeAllSaga, {})
     .next({ pathname: '/foo' })
     .parallel([
-      spawn(beforeAllSaga, {}),
       spawn(fooSaga, {}),
     ])
 
@@ -141,8 +141,9 @@ test('router with beforeRouteChange', () => {
     .next({ pathname: '/hello' }) // no match and listen
 
     .next({ pathname: '/baz/20/quux/abcd-1234' })
+    .spawn(beforeAllSaga, { id: '20', otherId: 'abcd-1234' })
+    .next({ pathname: '/baz/20/quux/abcd-1234' })
     .parallel([
-      spawn(beforeAllSaga, { id: '20', otherId: 'abcd-1234' }),
       spawn(bazSaga, { id: '20', otherId: 'abcd-1234' }),
     ])
 
