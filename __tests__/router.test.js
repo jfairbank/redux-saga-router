@@ -1,6 +1,7 @@
 /* eslint no-console: ["error", { allow: ["error"] }] */
 import { eventChannel } from 'redux-saga';
 import { put, spawn } from 'redux-saga/effects';
+import { createMockTask } from 'redux-saga/lib/utils';
 import testSaga from 'redux-saga-test-plan';
 import router from '../src/router';
 
@@ -22,6 +23,8 @@ const fakeError = {
   ...fakeErrorWithoutStack,
   stack: '1234',
 };
+
+const mockBeforeRouteChange = createMockTask();
 
 function* fooSaga() {
   yield put({ type: 'FOO' });
@@ -216,7 +219,9 @@ test('router with beforeRouteChange', () => {
     .next(initialLocation) // no match and listen
     .next({ pathname: '/foo' })
     .spawn(beforeAllSaga, {})
-    .next({ pathname: '/foo' })
+    .next(mockBeforeRouteChange)
+    .join(mockBeforeRouteChange)
+    .next()
     .parallel([
       spawn(fooSaga, {}),
     ])
@@ -226,7 +231,9 @@ test('router with beforeRouteChange', () => {
 
     .next({ pathname: '/baz/20/quux/abcd-1234' })
     .spawn(beforeAllSaga, { id: '20', otherId: 'abcd-1234' })
-    .next({ pathname: '/baz/20/quux/abcd-1234' })
+    .next(mockBeforeRouteChange)
+    .join(mockBeforeRouteChange)
+    .next()
     .parallel([
       spawn(bazSaga, { id: '20', otherId: 'abcd-1234' }),
     ])
