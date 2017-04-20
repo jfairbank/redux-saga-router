@@ -14,6 +14,8 @@ dispatch Redux actions in response to route changes.
 - [Install](#install)
 - [Usage](#usage)
 - [Behavior](#behavior)
+- [Pattern matching](#pattern-matching)
+- [Options](#options)
 - [Navigation](#navigation)
   - [Hash History](#hash-history)
   - [Browser History](#browser-history)
@@ -30,7 +32,8 @@ Redux Saga Router comes equipped with a `router` saga and two history
 strategies, `createBrowserHistory` and `createHashHistory`.
 
 The `router` saga expects a history object and a routes object with key-value
-pairs of route paths to other sagas (or just functions).
+pairs of route paths to other sagas (or just functions). It also takes optional
+third argument with [additional options](#options).
 
 To create a history object, you can use `createBrowserHistory` or
 `createHashHistory`. `createBrowserHistory` uses HTML5 `pushState` while
@@ -51,6 +54,16 @@ const createBrowserHistory = rsr.createBrowserHistory;
 
 const history = createBrowserHistory();
 
+const options = {
+  // A saga to be spawned in parallel on every location change
+  *beforeRouteChange() {
+    yield put(clearNotifications());
+  }
+
+  // Should match all applicable rules?
+  shouldFallThrough: true,
+}
+
 const routes = {
   // Method syntax
   *'/users'() {
@@ -70,7 +83,7 @@ function* mainSaga() {
 
   yield put(ready(data));
 
-  yield* router(history, routes);
+  yield* router(history, routes, options);  // [options] is not required
 }
 ```
 
@@ -102,6 +115,60 @@ will stop the running saga and will not propagate to the router. That means that
 your application will continue to function when you hit other routes. That also
 means you should ensure you handle any potential errors that could occur in your
 route sagas.
+
+## Pattern matching
+
+The router path may consist of multiple patterns. Examples:
+
+### Exact matching
+
+```
+const routes = {
+  // it will be matched only if location is equal to "/foo"
+  '/foo': saga,
+}
+```
+
+### Named parameters
+
+```
+const routes = {
+  // it will be matched by locations like "/bar/42baz" but NOT "/bar/"
+  '/bar/:id': saga,
+}
+```
+
+### Optional named parameters
+
+```
+const routes = {
+  // it will be matched by both "/bar/42baz" AND "/bar/"
+  '/bar/:id?': saga,
+
+  // a period before optional parameter is optional too, see "/bar/LICENSE", "/bar/README.md"
+  '/bar/:fname.:ext?': saga,
+}
+```
+
+### Catch-all pattern
+
+```
+const routes = {
+  // it will be matched based only on a prefix, e.g. "/bar/", "/bar/baz/foo/"
+  '/bar/*': saga,
+}
+```
+
+## Options
+
+The `router` saga may also take a third argument - an `options` object - which
+allows to specify additional behaviour as described below:
+
+Key                 | Description
+--------------------|--------------------------------------------------------
+`beforeRouteChange` | A saga spawned on any location change, before other saga
+`shouldFallThrough` | Determines whether route matching should take into account all matching rules
+
 
 ## Navigation
 
