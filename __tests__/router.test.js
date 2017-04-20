@@ -60,7 +60,7 @@ const routes = {
 };
 
 const options1 = {
-  shouldFallThrough: true,
+  matchAll: true,
 };
 
 const options2 = {
