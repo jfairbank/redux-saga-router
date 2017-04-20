@@ -1,5 +1,5 @@
 /* eslint no-console: ["error", { allow: ["error"] }] */
-import { call, take, spawn, cancel } from 'redux-saga/effects';
+import { call, take, spawn, cancel, join } from 'redux-saga/effects';
 import fsmIterator from 'fsm-iterator';
 import buildRouteMatcher from './buildRouteMatcher';
 import createHistoryChannel from './createHistoryChannel';
@@ -7,6 +7,7 @@ import createHistoryChannel from './createHistoryChannel';
 const INIT = 'INIT';
 const LISTEN = 'LISTEN';
 const BEFORE_HANDLE_LOCATION = 'BEFORE_HANDLE_LOCATION';
+const AWAIT_BEFORE_ALL = 'AWAIT_BEFORE_HANDLE_LOCATION';
 const HANDLE_LOCATION = 'HANDLE_LOCATION';
 
 export default function router(history, routes, options = {}) {
@@ -14,6 +15,8 @@ export default function router(history, routes, options = {}) {
   let historyChannel = null;
   let lastMatch = null;
   let lastSaga = null;
+  let pendingBeforeRouteChange = null;
+  let currentLocation = null;
 
   function errorMessageValue(error, message) {
     let finalMessage = `Redux Saga Router: ${message}:\n${error.message}`;
@@ -59,18 +62,32 @@ export default function router(history, routes, options = {}) {
     [BEFORE_HANDLE_LOCATION](location, fsm) {
       const path = location.pathname;
       const match = routeMatcher.match(path);
+      currentLocation = location;
+
       if (!match) {
         return fsm[LISTEN]();
       }
 
+      pendingBeforeRouteChange = spawn(options.beforeRouteChange, match.params);
+
       return {
-        value: spawn(options.beforeRouteChange, match.params),
+        value: pendingBeforeRouteChange,
+        next: AWAIT_BEFORE_ALL,
+      };
+    },
+
+    [AWAIT_BEFORE_ALL](task) {
+      if (task) {
+        return { value: join(task), next: HANDLE_LOCATION };
+      }
+      return {
+        value: join(pendingBeforeRouteChange),
         next: HANDLE_LOCATION,
       };
     },
 
     [HANDLE_LOCATION](location, fsm) {
-      const path = location.pathname;
+      const path = location ? location.pathname : currentLocation.pathname;
       const match = routeMatcher.match(path);
       const effects = [];
 
@@ -100,6 +117,10 @@ export default function router(history, routes, options = {}) {
 
         case LISTEN:
           return errorMessageValue(e, `Unexpected ${e.name} while listening for route`);
+
+        case BEFORE_HANDLE_LOCATION:
+        case AWAIT_BEFORE_ALL:
+          return errorMessageValue(e, `Error ${e.name} was uncaught within the before handle location hook.`);
 
         default:
           return { done: true };
