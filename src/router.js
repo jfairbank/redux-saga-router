@@ -56,7 +56,7 @@ export default function router(history, routes, options = {}) {
       while (match !== null) {
         lastMatch = match;
         effects.push(spawn(match.action, match.params));
-        match = options.shouldFallThrough ? match.next() : null;
+        match = options.matchAll ? match.next() : null;
       }
 
       if (lastSaga) {

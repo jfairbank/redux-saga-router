@@ -53,7 +53,7 @@ const routes = {
 };
 
 const options = {
-  shouldFallThrough: true,
+  matchAll: true,
 };
 
 const fakeChannel = eventChannel(() => () => {});
