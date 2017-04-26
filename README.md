@@ -14,6 +14,7 @@ dispatch Redux actions in response to route changes.
 - [Install](#install)
 - [Usage](#usage)
 - [Behavior](#behavior)
+- [Options](#options)
 - [Navigation](#navigation)
   - [Hash History](#hash-history)
   - [Browser History](#browser-history)
@@ -30,7 +31,8 @@ Redux Saga Router comes equipped with a `router` saga and two history
 strategies, `createBrowserHistory` and `createHashHistory`.
 
 The `router` saga expects a history object and a routes object with key-value
-pairs of route paths to other sagas (or just functions).
+pairs of route paths to other sagas (or just functions). It also takes optional
+third argument with [additional options](#options).
 
 To create a history object, you can use `createBrowserHistory` or
 `createHashHistory`. `createBrowserHistory` uses HTML5 `pushState` while
@@ -51,6 +53,13 @@ const createBrowserHistory = rsr.createBrowserHistory;
 
 const history = createBrowserHistory();
 
+const options = {
+  // A saga to be spawned in parallel on every location change
+  *beforeRouteChange() {
+    yield put(clearNotifications());
+  }
+}
+
 const routes = {
   // Method syntax
   *'/users'() {
@@ -70,7 +79,7 @@ function* mainSaga() {
 
   yield put(ready(data));
 
-  yield* router(history, routes);
+  yield* router(history, routes, options);  // [options] is not required
 }
 ```
 
@@ -102,6 +111,16 @@ will stop the running saga and will not propagate to the router. That means that
 your application will continue to function when you hit other routes. That also
 means you should ensure you handle any potential errors that could occur in your
 route sagas.
+
+## Options
+
+The `router` saga may also take a third argument - an `options` object - which
+allows to specify additional behaviour as described below:
+
+Key                 | Description
+--------------------|--------------------------------------------------------
+`beforeRouteChange` | A saga spawned on any location change, before other saga
+
 
 ## Navigation
 
