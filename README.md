@@ -55,7 +55,7 @@ const createBrowserHistory = rsr.createBrowserHistory;
 const history = createBrowserHistory();
 
 const options = {
-  shouldFallThrough: true,
+  matchAll: true,
 }
 
 const routes = {
@@ -160,7 +160,7 @@ allows to specify additional behaviour as described below:
 
 Key                 | Description
 --------------------|--------------------------------------------------------
-`shouldFallThrough` | Determines whether route matching should take into account all matching rules
+`matchAll` | Determines whether route matching should take into account all matching rules
 
 
 ## Navigation
