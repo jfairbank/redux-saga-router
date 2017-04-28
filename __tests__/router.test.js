@@ -1,6 +1,7 @@
 /* eslint no-console: ["error", { allow: ["error"] }] */
 import { eventChannel } from 'redux-saga';
 import { put, spawn } from 'redux-saga/effects';
+import { createMockTask } from 'redux-saga/lib/utils';
 import testSaga from 'redux-saga-test-plan';
 import router from '../src/router';
 
@@ -23,6 +24,8 @@ const fakeError = {
   stack: '1234',
 };
 
+const mockBeforeRouteChange = createMockTask();
+
 function* fooSaga() {
   yield put({ type: 'FOO' });
 }
@@ -39,6 +42,10 @@ function* bazSaga({ id, otherId }) {
   yield put({ type: 'BAZ', payload: [id, otherId] });
 }
 
+function* beforeAllSaga(params) {
+  yield put({ type: 'ALL', payload: params });
+}
+
 function* errorSaga() {
   yield put({ type: 'ERROR' });
   throw fakeError;
@@ -52,8 +59,12 @@ const routes = {
   '/error': errorSaga,
 };
 
-const options = {
+const options1 = {
   matchAll: true,
+};
+
+const options2 = {
+  beforeRouteChange: beforeAllSaga,
 };
 
 const fakeChannel = eventChannel(() => () => {});
@@ -127,7 +138,7 @@ test('router', () => {
 });
 
 test('router with fallThrough', () => {
-  testSaga(router, history, routes, options)
+  testSaga(router, history, routes, options1)
     .next() // init
     .next(fakeChannel) // listen
     .next(initialLocation) // no match and listen
@@ -192,6 +203,40 @@ test('router with fallThrough', () => {
       [console, console.error],
       'Redux Saga Router: Unhandled Error in route "/error":\nan error'
     )
+
+    .finish()
+    .isDone()
+
+    .restart()
+    .finish(42)
+    .returns(42);
+});
+
+test('router with beforeRouteChange', () => {
+  testSaga(router, history, routes, options2)
+    .next() // init
+    .next(fakeChannel) // listen
+    .next(initialLocation) // no match and listen
+    .next({ pathname: '/foo' })
+    .spawn(beforeAllSaga, {})
+    .next(mockBeforeRouteChange)
+    .join(mockBeforeRouteChange)
+    .next()
+    .parallel([
+      spawn(fooSaga, {}),
+    ])
+
+    .next() // listen
+    .next({ pathname: '/hello' }) // no match and listen
+
+    .next({ pathname: '/baz/20/quux/abcd-1234' })
+    .spawn(beforeAllSaga, { id: '20', otherId: 'abcd-1234' })
+    .next(mockBeforeRouteChange)
+    .join(mockBeforeRouteChange)
+    .next()
+    .parallel([
+      spawn(bazSaga, { id: '20', otherId: 'abcd-1234' }),
+    ])
 
     .finish()
     .isDone()

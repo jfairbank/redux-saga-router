@@ -55,7 +55,13 @@ const createBrowserHistory = rsr.createBrowserHistory;
 const history = createBrowserHistory();
 
 const options = {
+  // Define whether all matching sagas should be called 
+  // or only the first one 
   matchAll: true,
+  // A saga to be spawned before every location change
+  *beforeRouteChange() {
+    yield put(clearNotifications());
+  }
 }
 
 const routes = {
@@ -160,7 +166,8 @@ allows to specify additional behaviour as described below:
 
 Key                 | Description
 --------------------|--------------------------------------------------------
-`matchAll` | Determines whether route matching should take into account all matching rules
+`matchAll`          | Determines whether route matching should take into account all matching rules
+`beforeRouteChange` | A saga spawned on any location change, before other saga
 
 
 ## Navigation
