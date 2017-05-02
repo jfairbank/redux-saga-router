@@ -88,12 +88,13 @@ export default function router(history, routes, options = {}) {
 
     [HANDLE_LOCATION](location, fsm) {
       const path = location ? location.pathname : currentLocation.pathname;
-      const match = routeMatcher.match(path);
+      let match = routeMatcher.match(path);
       const effects = [];
 
-      if (match) {
+      while (match !== null) {
         lastMatch = match;
         effects.push(spawn(match.action, match.params));
+        match = options.matchAll ? match.next() : null;
       }
 
       if (lastSaga) {

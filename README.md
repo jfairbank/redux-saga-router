@@ -14,6 +14,7 @@ dispatch Redux actions in response to route changes.
 - [Install](#install)
 - [Usage](#usage)
 - [Behavior](#behavior)
+- [Pattern matching](#pattern-matching)
 - [Options](#options)
 - [Navigation](#navigation)
   - [Hash History](#hash-history)
@@ -54,7 +55,10 @@ const createBrowserHistory = rsr.createBrowserHistory;
 const history = createBrowserHistory();
 
 const options = {
-  // A saga to be spawned in parallel on every location change
+  // Define whether all matching sagas should be called 
+  // or only the first one 
+  matchAll: true,
+  // A saga to be spawned before every location change
   *beforeRouteChange() {
     yield put(clearNotifications());
   }
@@ -112,6 +116,49 @@ your application will continue to function when you hit other routes. That also
 means you should ensure you handle any potential errors that could occur in your
 route sagas.
 
+## Pattern matching
+
+The router path may consist of multiple patterns. Examples:
+
+### Exact matching
+
+```
+const routes = {
+  // it will be matched only if location is equal to "/foo"
+  '/foo': saga,
+}
+```
+
+### Named parameters
+
+```
+const routes = {
+  // it will be matched by locations like "/bar/42baz" but NOT "/bar/"
+  '/bar/:id': saga,
+}
+```
+
+### Optional named parameters
+
+```
+const routes = {
+  // it will be matched by both "/bar/42baz" AND "/bar/"
+  '/bar/:id?': saga,
+
+  // a period before optional parameter is optional too, see "/bar/LICENSE", "/bar/README.md"
+  '/bar/:fname.:ext?': saga,
+}
+```
+
+### Catch-all pattern
+
+```
+const routes = {
+  // it will be matched based only on a prefix, e.g. "/bar/", "/bar/baz/foo/"
+  '/bar/*': saga,
+}
+```
+
 ## Options
 
 The `router` saga may also take a third argument - an `options` object - which
@@ -119,6 +166,7 @@ allows to specify additional behaviour as described below:
 
 Key                 | Description
 --------------------|--------------------------------------------------------
+`matchAll`          | Determines whether route matching should take into account all matching rules
 `beforeRouteChange` | A saga spawned on any location change, before other saga
 
 
