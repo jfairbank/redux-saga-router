@@ -1,3 +1,34 @@
+## v2.1.0
+
+### NEW
+
+Redux Saga Router now supports a third optional options argument.
+
+#### Available Options
+
+Key                 | Description
+--------------------|--------------------------------------------------------
+`matchAll`          | If set to `true`, it allows all matching routes to run instead of the first matching route.
+`beforeRouteChange` | Set to a saga to run any time location changes. This is useful for dispatching a cleanup action before route changes.
+
+```js
+const options = {
+  matchAll: true,
+
+  *beforeRouteChange() {
+    yield put(clearNotifications());
+  },
+};
+
+function* mainSaga() {
+  yield fork(router, history, routes, options);
+}
+```
+
+Thanks to [@TeoTN](https://github.com/TeoTN) for implementing these two options!
+
+---
+
 ## v2.0.0
 
 ### Spawned Route Sagas
