@@ -1,30 +1,7 @@
 /* eslint no-console: ["error", { allow: ["error"] }] */
-import { eventChannel } from 'redux-saga';
-import { put, spawn } from 'redux-saga/effects';
-import { createMockTask } from 'redux-saga/lib/utils';
-import testSaga from 'redux-saga-test-plan';
+import { put } from 'redux-saga/effects';
+import { expectSaga } from 'redux-saga-test-plan';
 import router from '../src/router';
-
-const initialLocation = {
-  pathname: '/',
-};
-
-const history = {
-  location: initialLocation,
-  listen() {},
-};
-
-const fakeErrorWithoutStack = {
-  name: 'Error',
-  message: 'an error',
-};
-
-const fakeError = {
-  ...fakeErrorWithoutStack,
-  stack: '1234',
-};
-
-const mockBeforeRouteChange = createMockTask();
 
 function* fooSaga() {
   yield put({ type: 'FOO' });
@@ -42,206 +19,241 @@ function* bazSaga({ id, otherId }) {
   yield put({ type: 'BAZ', payload: [id, otherId] });
 }
 
-function* beforeAllSaga(params) {
-  yield put({ type: 'ALL', payload: params });
+function createHistory(initialPathname) {
+  const listeners = [];
+
+  let location = initialPathname
+    ? { pathname: initialPathname }
+    : null;
+
+  return {
+    get location() {
+      return location;
+    },
+
+    listen(listener) {
+      listeners.push(listener);
+
+      return () => {
+        listeners.splice(listeners.indexOf(listener), 1);
+      };
+    },
+
+    push(pathname) {
+      location = { pathname };
+
+      listeners.forEach((listener) => {
+        listener(location);
+      });
+    },
+  };
 }
 
-function* errorSaga() {
-  yield put({ type: 'ERROR' });
-  throw fakeError;
-}
-
-const routes = {
-  '/foo': fooSaga,
-  '/bar/:id/*': barSaga,
-  '/bar/:id/details': barDetailsSaga,
-  '/baz/:id/quux/:otherId': bazSaga,
-  '/error': errorSaga,
+const runConfig = {
+  silenceTimeout: true,
+  timeout: 10,
 };
 
-const options1 = {
-  matchAll: true,
-};
+it('responds to a route', () => {
+  const history = createHistory();
+  const routes = { '/foo': fooSaga };
 
-const options2 = {
-  beforeRouteChange: beforeAllSaga,
-};
+  const promise = expectSaga(router, history, routes)
+    .put({ type: 'FOO' })
+    .run(runConfig);
 
-const fakeChannel = eventChannel(() => () => {});
+  history.push('/foo');
 
-test('router', () => {
-  testSaga(router, history, routes)
-    .next() // init
-    .next(fakeChannel) // listen
-    .next(initialLocation) // no match and listen
-
-    .next({ pathname: '/foo' })
-    .parallel([
-      spawn(fooSaga, {}),
-    ])
-
-    .next() // listen
-    .next({ pathname: '/bar/42/' })
-    .parallel([
-      spawn(barSaga, { id: '42' }),
-    ])
-
-    .next() // listen
-    .next({ pathname: '/hello' }) // no match and listen
-
-    .next({ pathname: '/baz/20/quux/abcd-1234' })
-    .parallel([
-      spawn(bazSaga, { id: '20', otherId: 'abcd-1234' }),
-    ])
-
-    .next() // listen
-    .next({ pathname: '/error' })
-    .parallel([
-      spawn(errorSaga, {}),
-    ])
-    .throw(fakeError) // simulate error in route
-    .call(
-      [console, console.error],
-      'Redux Saga Router: Unhandled Error in route "/error":\nan error\n1234'
-    )
-
-    .next() // listen
-    .next({ pathname: '/foo' })
-    .parallel([
-      spawn(fooSaga, {}),
-    ])
-
-    .next() // listen
-    .throw(fakeError) // simulate error while listening
-    .call(
-      [console, console.error],
-      'Redux Saga Router: Unexpected Error while listening for route:\nan error\n1234'
-    )
-
-    .next() // listen
-    .next({ pathname: '/error' })
-    .parallel([
-      spawn(errorSaga, {}),
-    ])
-    .throw(fakeErrorWithoutStack) // simulate error when stack not available
-    .call(
-      [console, console.error],
-      'Redux Saga Router: Unhandled Error in route "/error":\nan error'
-    )
-
-    .finish()
-    .isDone()
-
-    .restart()
-    .finish(42)
-    .returns(42);
+  return promise;
 });
 
-test('router with fallThrough', () => {
-  testSaga(router, history, routes, options1)
-    .next() // init
-    .next(fakeChannel) // listen
-    .next(initialLocation) // no match and listen
+it('receives params', () => {
+  const history = createHistory();
+  const routes = { '/bar/:id/details': barDetailsSaga };
 
-    .next({ pathname: '/foo' })
-    .parallel([
-      spawn(fooSaga, {}),
-    ])
+  const promise = expectSaga(router, history, routes)
+    .put({ type: 'BAR_DETAILS', payload: '42' })
+    .run(runConfig);
 
-    .next() // listen
-    .next({ pathname: '/bar/42/' })
-    .parallel([
-      spawn(barSaga, { id: '42' }),
-    ])
+  history.push('/bar/42/details');
 
-    .next() // listen
-    .next({ pathname: '/bar/42/details' })
-    .parallel([
-      spawn(barSaga, { id: '42' }),
-      spawn(barDetailsSaga, { id: '42' }),
-    ])
-
-    .next() // listen
-    .next({ pathname: '/hello' }) // no match and listen
-
-    .next({ pathname: '/baz/20/quux/abcd-1234' })
-    .parallel([
-      spawn(bazSaga, { id: '20', otherId: 'abcd-1234' }),
-    ])
-
-    .next() // listen
-    .next({ pathname: '/error' })
-    .parallel([
-      spawn(errorSaga, {}),
-    ])
-    .throw(fakeError) // simulate error in route
-    .call(
-      [console, console.error],
-      'Redux Saga Router: Unhandled Error in route "/error":\nan error\n1234'
-    )
-
-    .next() // listen
-    .next({ pathname: '/foo' })
-    .parallel([
-      spawn(fooSaga, {}),
-    ])
-
-    .next() // listen
-    .throw(fakeError) // simulate error while listening
-    .call(
-      [console, console.error],
-      'Redux Saga Router: Unexpected Error while listening for route:\nan error\n1234'
-    )
-
-    .next() // listen
-    .next({ pathname: '/error' })
-    .parallel([
-      spawn(errorSaga, {}),
-    ])
-    .throw(fakeErrorWithoutStack) // simulate error when stack not available
-    .call(
-      [console, console.error],
-      'Redux Saga Router: Unhandled Error in route "/error":\nan error'
-    )
-
-    .finish()
-    .isDone()
-
-    .restart()
-    .finish(42)
-    .returns(42);
+  return promise;
 });
 
-test('router with beforeRouteChange', () => {
-  testSaga(router, history, routes, options2)
-    .next() // init
-    .next(fakeChannel) // listen
-    .next(initialLocation) // no match and listen
-    .next({ pathname: '/foo' })
-    .spawn(beforeAllSaga, {})
-    .next(mockBeforeRouteChange)
-    .join(mockBeforeRouteChange)
-    .next()
-    .parallel([
-      spawn(fooSaga, {}),
-    ])
+it('receives multiple params', () => {
+  const history = createHistory();
+  const routes = { '/baz/:id/quux/:otherId': bazSaga };
 
-    .next() // listen
-    .next({ pathname: '/hello' }) // no match and listen
+  const promise = expectSaga(router, history, routes)
+    .put({ type: 'BAZ', payload: ['42', '13'] })
+    .run(runConfig);
 
-    .next({ pathname: '/baz/20/quux/abcd-1234' })
-    .spawn(beforeAllSaga, { id: '20', otherId: 'abcd-1234' })
-    .next(mockBeforeRouteChange)
-    .join(mockBeforeRouteChange)
-    .next()
-    .parallel([
-      spawn(bazSaga, { id: '20', otherId: 'abcd-1234' }),
-    ])
+  history.push('/baz/42/quux/13');
 
-    .finish()
-    .isDone()
+  return promise;
+});
 
-    .restart()
-    .finish(42)
-    .returns(42);
+it('keeps listening for new routes', () => {
+  const history = createHistory();
+
+  const routes = {
+    '/foo': fooSaga,
+    '/bar/:id/details': barDetailsSaga,
+  };
+
+  const promise = expectSaga(router, history, routes)
+    .put({ type: 'FOO' })
+    .put({ type: 'BAR_DETAILS', payload: '42' })
+    .run(runConfig);
+
+  history.push('/foo');
+  history.push('/bar/42/details');
+
+  return promise;
+});
+
+it('keeps listening if a route saga throws an error', async () => {
+  const consoleError = console.error;
+  console.error = () => {};
+
+  function unhandledRejectionHandler() {}
+  process.on('unhandledRejection', unhandledRejectionHandler);
+
+  const history = createHistory();
+  const spy = jest.fn();
+
+  const routes = {
+    // eslint-disable-next-line require-yield
+    '/foo': function* fooSaga2() {
+      spy();
+    },
+
+    // eslint-disable-next-line require-yield
+    '/bar': function* barSaga2() {
+      throw new Error('error');
+    },
+  };
+
+  const promise = expectSaga(router, history, routes).run(runConfig);
+
+  history.push('/bar');
+  history.push('/foo');
+
+  await promise;
+
+  expect(spy).toHaveBeenCalledTimes(1);
+
+  console.error = consoleError;
+  process.removeListener('unhandledRejection', unhandledRejectionHandler);
+});
+
+it('inexact routes do not match without *', () => {
+  const history = createHistory();
+  const routes = { '/foo': fooSaga };
+
+  const promise = expectSaga(router, history, routes)
+    .not.put.actionType('FOO')
+    .run(runConfig);
+
+  history.push('/foo/bar');
+
+  return promise;
+});
+
+it('matches wildcards with *', () => {
+  const history = createHistory();
+  const routes = { '/foo*': fooSaga };
+
+  const promise = expectSaga(router, history, routes)
+    .put({ type: 'FOO' })
+    .run(runConfig);
+
+  history.push('/foo/bar');
+
+  return promise;
+});
+
+it('handles an initial location', () => {
+  const history = createHistory('/');
+
+  const routes = {
+    '/': function* homeSaga() {
+      yield put({ type: 'HOME' });
+    },
+  };
+
+  return expectSaga(router, history, routes)
+    .put({ type: 'HOME' })
+    .run(runConfig);
+});
+
+it('handles an beforeRouteChange', async () => {
+  const history = createHistory();
+  const callOrder = [];
+
+  const routes = {
+    '/foo': function* fooSaga2() {
+      callOrder.push('foo');
+      yield put({ type: 'FOO' });
+    },
+  };
+
+  const options = {
+    * beforeRouteChange() {
+      callOrder.push('beforeRouteChange');
+      yield put({ type: 'BEFORE' });
+    },
+  };
+
+  const promise = expectSaga(router, history, routes, options)
+    .put({ type: 'BEFORE' })
+    .put({ type: 'FOO' })
+    .run(runConfig);
+
+  history.push('/foo');
+
+  await promise;
+
+  expect(callOrder).toEqual(['beforeRouteChange', 'foo']);
+});
+
+describe('without matchAll option', () => {
+  it('first route to match wins', () => {
+    const routes = {
+      '/bar/:id/*': barSaga,
+      '/bar/:id/details': barDetailsSaga,
+    };
+
+    const history = createHistory();
+
+    const promise = expectSaga(router, history, routes)
+      .put({ type: 'BAR', payload: '42' })
+      .not.put.actionType('BAR_DETAILS')
+      .run(runConfig);
+
+    history.push('/bar/42/details');
+
+    return promise;
+  });
+});
+
+describe('with matchAll option', () => {
+  it('all matching routes run', () => {
+    const routes = {
+      '/bar/:id/*': barSaga,
+      '/bar/:id/details': barDetailsSaga,
+    };
+
+    const history = createHistory();
+    const options = { matchAll: true };
+
+    const promise = expectSaga(router, history, routes, options)
+      .put({ type: 'BAR', payload: '42' })
+      .put({ type: 'BAR_DETAILS', payload: '42' })
+      .run(runConfig);
+
+    history.push('/bar/42/details');
+
+    return promise;
+  });
 });
