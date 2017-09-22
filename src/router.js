@@ -1,8 +1,8 @@
 /* eslint no-console: ["error", { allow: ["error"] }] */
-import { call, take, spawn, cancel, join } from 'redux-saga/effects';
 import fsmIterator from 'fsm-iterator';
 import buildRouteMatcher from './buildRouteMatcher';
 import createHistoryChannel from './createHistoryChannel';
+import { all, call, take, spawn, cancel, join } from './effects';
 
 const INIT = 'INIT';
 const LISTEN = 'LISTEN';
@@ -103,7 +103,7 @@ export default function router(history, routes, options = {}) {
 
       if (effects.length > 0) {
         return {
-          value: effects,
+          value: all(effects),
           next: LISTEN,
         };
       }
