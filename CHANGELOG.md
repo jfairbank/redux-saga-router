@@ -1,3 +1,11 @@
+## v2.1.1
+
+### Internal fixes
+
+* Replace `[...effects]` with `all` per redux-saga 0.15's deprecation notice
+
+---
+
 ## v2.1.0
 
 ### NEW
