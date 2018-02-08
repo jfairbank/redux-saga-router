@@ -21,7 +21,7 @@ dispatch Redux actions in response to route changes.
   - [Hash History](#hash-history)
   - [Browser History](#browser-history)
   - [Browser History with React](#browser-history-with-react)
-  - [React Router v2/v3](#react-router)
+  - [React Router](#react-router)
 
 ## Install
 
@@ -336,7 +336,7 @@ export default function App() {
 
 ### React Router
 
-Redux Saga Router can also work in tandem with React Router v2 or v3! Instead of
+Redux Saga Router can also work in tandem with React Router (v2, v3, and v4)! Instead of
 using one of Redux Saga Router's history creation functions, just use your
 history object from React Router.
 
