@@ -1,6 +1,6 @@
 import buildRouteMatcher from '../src/buildRouteMatcher';
 
-test('creates a route matcher', () => {
+test('creates a route matcher by object syntax', () => {
   const rootRoute = () => 'root route';
   const fooRoute = () => 'foo route';
 
@@ -17,6 +17,55 @@ test('creates a route matcher', () => {
 
   expect(rootMatch.action).toBe(rootRoute);
   expect(fooMatch.action).toBe(fooRoute);
+});
+
+test('creates a route matcher by array syntax, honouring route order', () => {
+  const fooRoute = () => 'foo route';
+  const fooBarRoute = () => 'foo bar route';
+
+  const descendingSpecificityMatcher = buildRouteMatcher([
+    { pattern: '/foo/bar', handler: fooBarRoute },
+    { pattern: '/foo/:arg', handler: fooRoute },
+  ]);
+  const ascendingSpecificityMatcher = buildRouteMatcher([
+    { pattern: '/foo/:arg', handler: fooRoute },
+    { pattern: '/foo/bar', handler: fooBarRoute },
+  ]);
+
+  const descendingFooMatch = descendingSpecificityMatcher.match('/foo/baz');
+  const descendingFooBarMatch = descendingSpecificityMatcher.match('/foo/bar');
+  const ascendingFooMatch = ascendingSpecificityMatcher.match('/foo/baz');
+  const ascendingFooBarMatch = ascendingSpecificityMatcher.match('/foo/bar');
+
+  expect(descendingFooMatch).not.toBe(null);
+  expect(descendingFooBarMatch).not.toBe(null);
+  expect(ascendingFooMatch).not.toBe(null);
+  expect(ascendingFooBarMatch).not.toBe(null);
+
+  expect(descendingFooMatch.action).toBe(fooRoute);
+  expect(descendingFooBarMatch.action).toBe(fooBarRoute);
+  expect(ascendingFooMatch.action).toBe(fooRoute);
+  expect(ascendingFooBarMatch.action).toBe(fooRoute);
+  expect(ascendingFooMatch.params.arg).toBe('baz');
+  expect(ascendingFooBarMatch.params.arg).toBe('bar');
+});
+
+test('throws an error when given incompatible values for routes', () => {
+  expect(() => {
+    buildRouteMatcher(null);
+  }).toThrow();
+
+  expect(() => {
+    buildRouteMatcher(undefined);
+  }).toThrow();
+
+  expect(() => {
+    buildRouteMatcher('string');
+  }).toThrow();
+
+  expect(() => {
+    buildRouteMatcher(1234);
+  }).toThrow();
 });
 
 test('recognizes fall-through pattern', () => {
