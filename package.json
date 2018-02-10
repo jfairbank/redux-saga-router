@@ -75,6 +75,6 @@
     "webpack-dev-server": "^1.16.1"
   },
   "peerDependencies": {
-    "redux-saga": ">=0.10.0 <=0.16.0"
+    "redux-saga": ">=0.10.0 <0.17.0"
   }
 }
