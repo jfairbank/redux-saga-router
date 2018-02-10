@@ -14,8 +14,7 @@ dispatch Redux actions in response to route changes.
 - [Install](#install)
 - [Usage](#usage)
 - [Behavior](#behavior)
-- [Parameters](#parameters)
-- [Route Matching](#route-matching)
+- [Routes](#routes)
 - [Options](#options)
 - [Navigation](#navigation)
   - [Hash History](#hash-history)
@@ -103,7 +102,35 @@ your application will continue to function when you hit other routes. That also
 means you should ensure you handle any potential errors that could occur in your
 route sagas.
 
-## Parameters
+## Routes
+
+Routes may be expressed as either an object or an array with the main difference 
+being that the array form preserves order and, therefore, the precedence of
+routes.
+
+```js
+const objectFormRoutes = {
+  '/foo': fooHandler,
+  '/bar': barHandler,
+};
+
+const arrayFormRoutes = [
+  { pattern: '/foo', handler: fooHandler },
+  { pattern: '/bar', handler: barHandler },
+];
+```
+
+### Exact Matching
+
+This route will only match `/foo` exactly.
+
+```js
+const routes = {
+  '/foo': saga,
+};
+```
+
+### Path Parameters
 
 You can capture dynamic path parameters by prepending them with the `:` symbol.
 The name you use will be assigned to a property of the same name on a parameters
@@ -124,22 +151,6 @@ const routes = {
   },
 };
 ```
-
-## Route Matching
-
-Here are some examples of how route matching works.
-
-### Exact Matching
-
-This route will only match `/foo` exactly.
-
-```js
-const routes = {
-  '/foo': saga,
-};
-```
-
-### Path Parameters
 
 If you specify a dynamic path parameter, then it will be required. This route
 will match `/bar/42` but NOT `/bar`.
@@ -183,6 +194,28 @@ const routes = {
   '/bar/*': saga,
 };
 ```
+
+### Route Precedence
+
+It is often desirable to have some routes take higher precedence over others.
+Consider the case where one route accepts a parameter but for a particular value
+of that parameter, we want to use a separate handler:
+
+```js
+const routes = [
+  { pattern: '/foo/baz', handler: bazHandler },
+  { pattern: '/foo/:arg', handler: genericHandler },
+]
+```
+
+By using the array form to define routes, and placing the specific pattern
+before the general pattern (higher precedence), we can have `bazHandler` invoked 
+whenever the route `/foo/baz` is visited, and `genericHandler` for
+anything else under `/foo`.
+
+Note that if we were to reverse the order of the above routes, `genericHandler`
+would be invoked for both `/foo/baz` and anything else under `/foo`, leaving
+`bazHandler` unreachable.
 
 ## Options
 
