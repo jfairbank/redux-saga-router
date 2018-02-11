@@ -2,6 +2,8 @@
 
 ## NEW - Array Routes
 
+Credit to [@paulcoyle](https://github.com/paulcoyle).
+
 Sometimes you want some routes to take precedence over others. For example,
 consider a `/users/invite` route and a `/users/:id` route. JavaScript objects
 don't guarantee order, so the `/users/:id` route could take precedence and match
@@ -10,6 +12,7 @@ don't guarantee order, so the `/users/:id` route could take precedence and match
 ## Miscellaneous Changes
 
 * Support redux-saga 0.16 in `peerDependencies`.
+* Update README to show React Router v4 support. (credit [@visusnet ](https://github.com/visusnet))
 
 ```js
 // Can't guarantee precedence with an object
