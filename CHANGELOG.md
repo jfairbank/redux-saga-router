@@ -1,3 +1,11 @@
+## v2.1.2
+
+### Bug Fixes
+
+* Prevent missing `PropTypes` with `createLink` when using React 16. Attempt to import `PropTypes` from the `prop-types` package if `PropTypes` is missing from the `React` object.
+
+---
+
 ## v2.1.1
 
 ### Internal fixes
