@@ -20,7 +20,7 @@ dispatch Redux actions in response to route changes.
   - [Hash History](#hash-history)
   - [Browser History](#browser-history)
   - [Browser History with React](#browser-history-with-react)
-  - [React Router v2/v3](#react-router)
+  - [React Router](#react-router)
 
 ## Install
 
@@ -318,11 +318,18 @@ available in React Router. Just pass in your `history` object to the
 separate file in your application for exporting your `history` object and your
 `Link` component.
 
+If you are also using React Router, you can use the `Link` component that is shipped with React Router.
+
 ```js
 // history.js
 
-import { createBrowserHistory } from 'redux-saga-router';
 import { createLink } from 'redux-saga-router/react'
+
+// Without React Router v4:
+import { createBrowserHistory } from 'redux-saga-router';
+
+// With the history npm package:
+import createBrowserHistory from 'history/createBrowserHistory';
 
 const history = createBrowserHistory();
 
@@ -369,15 +376,21 @@ export default function App() {
 
 ### React Router
 
-Redux Saga Router can also work in tandem with React Router v2 or v3! Instead of
+Redux Saga Router can also work in tandem with React Router (v2, v3, and v4)! Instead of
 using one of Redux Saga Router's history creation functions, just use your
-history object from React Router.
+history object from React Router (v2, v3) or use the history creation functions provided by the history npm package (v4).
 
 ```js
 // saga.js
 
 import { router } from 'redux-saga-router';
+
+// React Router v2 and v3:
 import { browserHistory as history } from 'react-router';
+
+// React Router v4:
+import createBrowserHistory from 'history/createBrowserHistory';
+const history = createBrowserHistory();
 
 const routes = {
   // ...
@@ -421,11 +434,18 @@ import React from 'react';
 import { render } from 'react-dom';
 import { applyMiddleware, createStore } from 'redux';
 import createSagaMiddleware from 'redux-saga';
-import { Router, Route, browserHistory as history } from 'react-router';
 import App from './App';
 import Users from './Users';
 import User from './User';
 import mainSaga from './saga';
+
+// React Router v2 and v3:
+import { Router, Route, browserHistory as history } from 'react-router';
+
+// React Router v4:
+import createBrowserHistory from 'history/createBrowserHistory';
+import { Router, Route } from 'react-router';
+const history = createBrowserHistory();
 
 function reducer() {
   return {};
