@@ -197,25 +197,31 @@ const routes = {
 
 ### Route Precedence
 
-It is often desirable to have some routes take higher precedence over others.
-Consider the case where one route accepts a parameter but for a particular value
-of that parameter, we want to use a separate handler:
+Sometimes you want some routes to take precedence over others. For example,
+consider a `/users/invite` route and a `/users/:id` route. JavaScript objects
+don't guarantee order, so the `/users/:id` route could take precedence and match
+`/users/invite`. So, the `newUser` handler would never run.
+
+```js
+// Can't guarantee precedence with an object
+const routes = {
+  '/users/invite': inviteUser,
+  '/users/:id': newUser,
+};
+```
+
+To fix this problem, you can define routes with an array of route objects like
+so.
 
 ```js
 const routes = [
-  { pattern: '/foo/baz', handler: bazHandler },
-  { pattern: '/foo/:arg', handler: genericHandler },
-]
+  { pattern: '/users/invite', handler: inviteUser },
+  { pattern: '/users/:id', handler: newUser },
+];
 ```
 
-By using the array form to define routes, and placing the specific pattern
-before the general pattern (higher precedence), we can have `bazHandler` invoked 
-whenever the route `/foo/baz` is visited, and `genericHandler` for
-anything else under `/foo`.
-
-Note that if we were to reverse the order of the above routes, `genericHandler`
-would be invoked for both `/foo/baz` and anything else under `/foo`, leaving
-`bazHandler` unreachable.
+The array form will register routes in the order you provide, ensuring
+precedence.
 
 ## Options
 
