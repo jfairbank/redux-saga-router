@@ -185,13 +185,16 @@ const routes = {
 
 ### Wildcard
 
-You can use `*` as a wildcard to match many routes.
+You can use `*` as a wildcard to match many routes. The collected wildcard route
+segments will be passed as an array to the second argument of the receiving
+saga.
 
-This route would match `/bar` and `/bar/baz/foo`.
+This route would match `/bar` and `/bar/baz/foo` with wildcard values of `['']`
+and `['baz/foo']`, respectively.
 
 ```js
 const routes = {
-  '/bar/*': saga,
+  '/bar*': function*(params, wildcards) {},
 };
 ```
 
