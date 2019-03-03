@@ -1,10 +1,5 @@
-import { effects as sagaEffects } from 'redux-saga';
+import * as sagaEffects from 'redux-saga/effects';
 
-export const call = sagaEffects.call;
-export const take = sagaEffects.take;
-export const spawn = sagaEffects.spawn;
-export const cancel = sagaEffects.cancel;
-export const join = sagaEffects.join;
+export const { call, take, spawn, cancel, join } = sagaEffects;
 
-// eslint-disable-next-line import/namespace
 export const all = sagaEffects.all || (effects => effects);
