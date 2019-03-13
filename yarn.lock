@@ -4570,8 +4570,8 @@ rechoir@^0.6.2:
     resolve "^1.1.6"
 
 redux-saga-test-plan@^3.4.0:
-  version "3.4.0"
-  resolved "https://registry.yarnpkg.com/redux-saga-test-plan/-/redux-saga-test-plan-3.4.0.tgz#7d7bba7da099028e6f857dd0728dbcd84ff1674f"
+  version "3.7.0"
+  resolved "https://registry.yarnpkg.com/redux-saga-test-plan/-/redux-saga-test-plan-3.7.0.tgz#c8f513b1c6e13eef526a6b8a2e9076b6f26f5698"
   dependencies:
     core-js "^2.4.1"
     fsm-iterator "^1.1.0"
