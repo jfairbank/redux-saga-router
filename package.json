@@ -62,7 +62,7 @@
     "eslint-plugin-jsx-a11y": "^2.2.2",
     "eslint-plugin-react": "^6.3.0",
     "express": "^4.14.0",
-    "jest": "^19.0.2",
+    "jest": "^24.5.0",
     "react": "^16.2.0",
     "react-dom": "^16.2.0",
     "react-redux": "^5.0.6",
