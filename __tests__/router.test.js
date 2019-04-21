@@ -19,6 +19,10 @@ function* bazSaga({ id, otherId }) {
   yield put({ type: 'BAZ', payload: [id, otherId] });
 }
 
+function* wildcardSaga({ id }, splats) {
+  yield put({ type: 'WILDCARD', payload: { id, splats } });
+}
+
 function createHistory(initialPathname) {
   const listeners = [];
 
@@ -162,13 +166,13 @@ it('inexact routes do not match without *', () => {
 
 it('matches wildcards with *', () => {
   const history = createHistory();
-  const routes = { '/foo*': fooSaga };
+  const routes = { '/foo/:id/*': wildcardSaga };
 
   const promise = expectSaga(router, history, routes)
-    .put({ type: 'FOO' })
+    .put({ type: 'WILDCARD', payload: { id: 'bar', splats: ['baz/quux'] } })
     .run(runConfig);
 
-  history.push('/foo/bar');
+  history.push('/foo/bar/baz/quux');
 
   return promise;
 });

@@ -93,7 +93,7 @@ export default function router(history, routes, options = {}) {
 
       while (match !== null) {
         lastMatch = match;
-        effects.push(spawn(match.action, match.params));
+        effects.push(spawn(match.action, match.params, match.splats));
         match = options.matchAll ? match.next() : null;
       }
 

@@ -1,3 +1,4 @@
-export createBrowserHistory from 'history/createBrowserHistory';
-export createHashHistory from 'history/createHashHistory';
-export router from './router';
+import * as history from "history";
+export const createBrowserHistory = history.createBrowserHistory;
+export const createHashHistory = history.createHashHistory;
+export { router } from "./router";
