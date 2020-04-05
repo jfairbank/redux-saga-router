@@ -2,6 +2,7 @@
 import { put } from 'redux-saga/effects';
 import { expectSaga } from 'redux-saga-test-plan';
 import router from '../src/router';
+import { createMemoryHistory as createHistory } from "history";
 
 function* fooSaga() {
   yield put({ type: 'FOO' });
@@ -17,36 +18,6 @@ function* barDetailsSaga({ id }) {
 
 function* bazSaga({ id, otherId }) {
   yield put({ type: 'BAZ', payload: [id, otherId] });
-}
-
-function createHistory(initialPathname) {
-  const listeners = [];
-
-  let location = initialPathname
-    ? { pathname: initialPathname }
-    : null;
-
-  return {
-    get location() {
-      return location;
-    },
-
-    listen(listener) {
-      listeners.push(listener);
-
-      return () => {
-        listeners.splice(listeners.indexOf(listener), 1);
-      };
-    },
-
-    push(pathname) {
-      location = { pathname };
-
-      listeners.forEach((listener) => {
-        listener(location);
-      });
-    },
-  };
 }
 
 const runConfig = {
