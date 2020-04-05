@@ -1,4 +1,4 @@
-import { eventChannel, buffers } from 'redux-saga';
+import { eventChannel, buffers } from 'redux-saga/dist/redux-saga-core-npm-proxy.cjs';
 
 const BUFFER_LIMIT = 5;
 

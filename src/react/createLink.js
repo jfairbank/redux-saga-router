@@ -5,12 +5,14 @@ const PropTypes = React.PropTypes || require('prop-types');
 
 export default function createLink(history) {
   class Link extends Component {
+    // eslint-disable-next-line
     static propTypes = {
       to: PropTypes.string.isRequired,
       className: PropTypes.string,
       children: PropTypes.any,
     };
 
+    // eslint-disable-next-line
     onClick = (e) => {
       e.preventDefault();
       history.push(this.props.to);

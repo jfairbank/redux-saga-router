@@ -1,4 +1,4 @@
-import { effects as sagaEffects } from 'redux-saga';
+import * as sagaEffects from 'redux-saga/effects';
 
 export const call = sagaEffects.call;
 export const take = sagaEffects.take;
