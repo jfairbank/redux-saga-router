@@ -1,8 +1,8 @@
 /* eslint no-console: ["error", { allow: ["error"] }] */
 import { put } from 'redux-saga/effects';
 import { expectSaga } from 'redux-saga-test-plan';
-import router from '../src/router';
 import { createMemoryHistory as createHistory } from "history";
+import router from '../src/router';
 
 function* fooSaga() {
   yield put({ type: 'FOO' });
