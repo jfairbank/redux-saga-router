@@ -1,3 +1,58 @@
+## v2.2.0
+
+## NEW - Array Routes
+
+Credit to [@paulcoyle](https://github.com/paulcoyle).
+
+Sometimes you want some routes to take precedence over others. For example,
+consider a `/users/invite` route and a `/users/:id` route. JavaScript objects
+don't guarantee order, so the `/users/:id` route could take precedence and match
+`/users/invite`. So, the `newUser` handler would never run.
+
+## Miscellaneous Changes
+
+* Support redux-saga 0.16 in `peerDependencies`.
+* Update README to show React Router v4 support. (credit [@visusnet ](https://github.com/visusnet))
+
+```js
+// Can't guarantee precedence with an object
+const routes = {
+  '/users/invite': inviteUser,
+  '/users/:id': newUser,
+};
+```
+
+To fix this problem, you can define routes with an array of route objects like
+so.
+
+```js
+const routes = [
+  { pattern: '/users/invite', handler: inviteUser },
+  { pattern: '/users/:id', handler: newUser },
+];
+```
+
+The array form will register routes in the order you provide, ensuring
+precedence.
+
+---
+
+## v2.1.2
+
+### Bug Fixes
+
+* Prevent missing `PropTypes` with `createLink` when using React 16. Attempt to import `PropTypes` from the `prop-types` package if `PropTypes` is missing from the `React` object.
+
+---
+
+## v2.1.1
+
+### Internal fixes
+
+* Replace `[...effects]` with `all` per redux-saga 0.15's deprecation notice
+
+---
+
 ## v2.1.0
 
 ### NEW

@@ -1,6 +1,7 @@
 /* eslint no-console: ["error", { allow: ["error"] }] */
 import { put } from 'redux-saga/effects';
 import { expectSaga } from 'redux-saga-test-plan';
+import { createMemoryHistory as createHistory } from "history";
 import router from '../src/router';
 
 function* fooSaga() {
@@ -17,36 +18,6 @@ function* barDetailsSaga({ id }) {
 
 function* bazSaga({ id, otherId }) {
   yield put({ type: 'BAZ', payload: [id, otherId] });
-}
-
-function createHistory(initialPathname) {
-  const listeners = [];
-
-  let location = initialPathname
-    ? { pathname: initialPathname }
-    : null;
-
-  return {
-    get location() {
-      return location;
-    },
-
-    listen(listener) {
-      listeners.push(listener);
-
-      return () => {
-        listeners.splice(listeners.indexOf(listener), 1);
-      };
-    },
-
-    push(pathname) {
-      location = { pathname };
-
-      listeners.forEach((listener) => {
-        listener(location);
-      });
-    },
-  };
 }
 
 const runConfig = {
@@ -112,7 +83,8 @@ it('keeps listening for new routes', () => {
   return promise;
 });
 
-it('keeps listening if a route saga throws an error', async () => {
+// Disable test due to https://github.com/facebook/jest/issues/5620
+xit('keeps listening if a route saga throws an error', async () => {
   const consoleError = console.error;
   console.error = () => {};
 
@@ -143,11 +115,13 @@ it('keeps listening if a route saga throws an error', async () => {
 
   expect(spy).toHaveBeenCalledTimes(1);
 
+  await promise;
+
   console.error = consoleError;
   process.removeListener('unhandledRejection', unhandledRejectionHandler);
 });
 
-it('inexact routes do not match without *', () => {
+it('inexact routes do not match without *', async () => {
   const history = createHistory();
   const routes = { '/foo': fooSaga };
 
@@ -157,10 +131,10 @@ it('inexact routes do not match without *', () => {
 
   history.push('/foo/bar');
 
-  return promise;
+  await promise;
 });
 
-it('matches wildcards with *', () => {
+it('matches wildcards with *', async () => {
   const history = createHistory();
   const routes = { '/foo*': fooSaga };
 
@@ -170,10 +144,10 @@ it('matches wildcards with *', () => {
 
   history.push('/foo/bar');
 
-  return promise;
+  await promise;
 });
 
-it('handles an initial location', () => {
+it('handles an initial location', async () => {
   const history = createHistory('/');
 
   const routes = {
@@ -182,7 +156,7 @@ it('handles an initial location', () => {
     },
   };
 
-  return expectSaga(router, history, routes)
+  await expectSaga(router, history, routes)
     .put({ type: 'HOME' })
     .run(runConfig);
 });
@@ -218,7 +192,7 @@ it('handles an beforeRouteChange', async () => {
 });
 
 describe('without matchAll option', () => {
-  it('first route to match wins', () => {
+  it('first route to match wins', async () => {
     const routes = {
       '/bar/:id/*': barSaga,
       '/bar/:id/details': barDetailsSaga,
@@ -233,12 +207,12 @@ describe('without matchAll option', () => {
 
     history.push('/bar/42/details');
 
-    return promise;
+    await promise;
   });
 });
 
 describe('with matchAll option', () => {
-  it('all matching routes run', () => {
+  it('all matching routes run', async () => {
     const routes = {
       '/bar/:id/*': barSaga,
       '/bar/:id/details': barDetailsSaga,
@@ -254,6 +228,6 @@ describe('with matchAll option', () => {
 
     history.push('/bar/42/details');
 
-    return promise;
+    await promise;
   });
 });
